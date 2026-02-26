@@ -1,19 +1,19 @@
-FROM eclipse-temurin:25-jdk AS build
+FROM eclipse-temurin:25-jdk as build
+
 WORKDIR /app
 COPY . /app
+
 RUN chmod +x mvnw
-RUN ./mvnw package -DskipTests
+RUN ./mvnw clean package -DskipTests
 RUN mv -f target/*.jar app.jar
 
 FROM eclipse-temurin:25-jre
-WORKDIR /app
-COPY --from=build /app/app.jar ./
+ARG PORT
+ENV PORT=${PORT}
 
-# Render asigna PORT automáticamente
-ENV PORT=8080
-EXPOSE ${PORT}
+COPY --from=build /app/app.jar .
 
 RUN useradd runtime
 USER runtime
 
-ENTRYPOINT ["java", "-Dserver.port=${PORT}", "-jar", "app.jar"]
+ENTRYPOINT [ "java", "-Dserver.port=${PORT}", "-jar", "app.jar" ]
